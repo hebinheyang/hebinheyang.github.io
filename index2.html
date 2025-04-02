@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <!-- 最新版本的 echarts 核心 CSS 文件 -->
+    <script src="echarts/echarts.min.js"></script>
+    <!-- 最新版本的 echarts 核心 CSS 文件 -->
+    <script src="js/map/china.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+
+        /* 新增背景 */
+        html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  /* position: relative; */
+    position: static; /* 移除定位 */
+  /* overflow: hidden; */
+    overflow: auto; /* 允许滚动 */
+  background: #0a192f; /* 深海蓝基色 */
+}
+
+/* 动态渐变层 */
+body::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: 
+    linear-gradient(
+      335deg, 
+      rgba(16, 84, 147, 0.8) 0%, 
+      rgba(92, 167, 228, 0.6) 25%,
+      rgba(138, 43, 226, 0.4) 50%,
+      rgba(255, 105, 180, 0.2) 100%
+    ),
+    radial-gradient(
+      circle at 70% 30%,
+      rgba(255, 215, 0, 0.15) 0%,
+      transparent 40%
+    );
+  animation: gradientFlow 14s ease infinite;
+  mix-blend-mode: soft-light;
+}
+
+/* 星际粒子层 */
+body::after {
+  content: '';
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  background: 
+    radial-gradient(circle, 
+      rgba(255,255,255,0.9) 6%, 
+      transparent 4%
+    ),
+    radial-gradient(circle, 
+      rgba(255,215,0,0.8) 4%, 
+      transparent 6%
+    );
+  background-size: 50px 50px;
+  opacity: 0.3;
+  animation: 
+    particleMove 30s linear infinite,
+    particlePulse 4s ease-in-out infinite;
+}
+body::before,
+body::after {
+  transform: translate3d(0,0,0); /* 启用硬件加速 */
+  will-change: transform, opacity; /* 提前告知浏览器 */
+}
+
+@keyframes gradientFlow {
+  0%, 100% { 
+    transform: rotate(0deg) translate(0, 0);
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: rotate(2deg) translate(-5%, 3%);
+  }
+  50% { 
+    transform: rotate(-1deg) translate(5%, -2%);
+  }
+  75% { 
+    transform: rotate(3deg) translate(-3%, 4%);
+  }
+}
+
+@keyframes particleMove {
+  from { transform: translate(0,0); }
+  to { transform: translate(-50%,-50%); }
+}
+
+@keyframes particlePulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.4; }
+}
+
+/* 内容容器优化 */
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  background: rgba(10, 25, 47, 0.7);
+  padding: 2rem;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(92, 167, 228, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+/* 新增截止 */
+
+        .fruit {
+            width: 100%;
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            /* 标题和图表之间的间距 */
+            font-size: 24px;
+            color: white;
+        }
+
+        .button-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .button-container button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #main {
+            width: 100%;
+            height: 900px;
+            margin: auto;
+              position: relative;
+  z-index: 1; /* 确保高于背景层 */
+        }
+
+        /* 地图容器特殊处理 */
+.echarts-container { 
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+        /*默认长宽比0.75*/
+
+
+
+
+    /* 新增 */
+      /* 新增按钮样式 */
+        .button-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+             position: relative;
+  z-index: 3; /* 高于地图 */
+        }
+        
+        .button-container button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .button-container button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 修改说明框样式 */
+        .description {
+            width: 20%;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .description h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .description ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .description li {
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .description li::before {
+            content: "•";
+            color: currentColor;
+            position: absolute;
+            left: -15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fruit" id="title">中国各地水果年产量（单位：万吨）</div>
+    <div class="button-container">
+        <button onclick="changeData('fruit')">水果</button>
+        <button onclick="changeData('vegetable')">蔬菜</button>
+        <button onclick="changeData('meat')">肉类</button>
+        <button onclick="changeData('grain')">粮食</button>
+        <button onclick="changeData('seafood')">海鲜</button>
+        <button onclick="changeData('dairy')">奶制品</button>
+    </div>
+    
+ 
+
+    
+    <div id="main">
+            <div class="description" id="dataDescription">
+                <!-- 内容将通过JavaScript动态生成 -->
+            </div>
+    </div>
+    <script type="text/javascript">
+        // 数据
+        var data = {
+            fruit: [
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 38.33 },
+                { name: '天津', value: 57.85 },
+                { name: '上海', value: 31.92 },
+                { name: '重庆', value: 593.28 },
+                { name: '河北', value: 1533.87 },
+                { name: '河南', value: 2542.03 },
+                { name: '云南', value: 1298.05 },
+                { name: '辽宁', value: 879.66 },
+                { name: '黑龙江', value: 189.43 },
+                { name: '湖南', value: 1208.17 },
+                { name: '安徽', value: 798.35 },
+                { name: '山东', value: 3095.51 },
+                { name: '新疆', value: 1672.61 },
+                { name: '江苏', value: 1002.13 },
+                { name: '浙江', value: 704.49 },
+                { name: '江西', value: 749.38 },
+                { name: '湖北', value: 1143.24 },
+                { name: '广西', value: 3402.46 },
+                { name: '甘肃', value: 965.46 },
+                { name: '山西', value: 1002.77 },
+                { name: '内蒙古', value: 175.54 },
+                { name: '陕西', value: 2240.78 },
+                { name: '吉林', value: 166.02 },
+                { name: '福建', value: 864.94 },
+                { name: '贵州', value: 698.87 },
+                { name: '广东', value: 2028.38 },
+                { name: '青海', value: 2.77 },
+                { name: '西藏', value: 3.14 },
+                { name: '四川', value: 1380.5 },
+                { name: '宁夏', value: 271.73 },
+                { name: '海南', value: 563.57 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ],
+          meat: [
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 4.33 },
+                { name: '天津', value: 29.5 },
+                { name: '上海', value: 9.54 },
+                { name: '重庆', value: 205.27 },
+                { name: '河北', value: 478.83 },
+                { name: '河南', value: 660.04 },
+                { name: '云南', value: 521.6 },
+                { name: '辽宁', value: 446.21 },
+                { name: '黑龙江', value: 312.53 },
+                { name: '湖南', value: 580.86 },
+                { name: '安徽', value: 475.34 },
+                { name: '山东', value: 844.51 },
+                { name: '新疆', value: 204.69 },
+                { name: '江苏', value: 318.06 },
+                { name: '浙江', value: 108.49 },
+                { name: '江西', value: 359.9 },
+                { name: '湖北', value: 441.16 },
+                { name: '广西', value: 454.94 },
+                { name: '甘肃', value: 142.65 },
+                { name: '山西', value: 143.2 },
+                { name: '内蒙古', value: 284.05 },
+                { name: '陕西', value: 132.09 },
+                { name: '吉林', value: 291.04 },
+                { name: '福建', value: 296.3 },
+                { name: '贵州', value: 241.03 },
+                { name: '广东', value: 481.01 },
+                { name: '青海', value: 40.98 },
+                { name: '西藏', value: 28.63 },
+                { name: '四川', value: 685.72 },
+                { name: '宁夏', value: 36.77 },
+                { name: '海南', value: 69.2 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ],
+           grain: [
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 57.6 },
+                { name: '天津', value: 270.6 },
+                { name: '上海', value: 98.3 },
+                { name: '重庆', value: 1100.7 },
+                { name: '河北', value: 3908.8 },
+                { name: '河南', value: 6719.4 },
+                { name: '云南', value: 1993.5 },
+                { name: '辽宁', value: 2500.3 },
+                { name: '黑龙江', value: 8001.7 },
+                { name: '湖南', value: 3078.1 },
+                { name: '安徽', value: 4184.3 },
+                { name: '山东', value: 5710.2 },
+                { name: '新疆', value: 2330.2 },
+                { name: '江苏', value: 3810.1 },
+                { name: '浙江', value: 650.2 },
+                { name: '江西', value: 2196.0 },
+                { name: '湖北', value: 2785.3 },
+                { name: '广西', value: 1403.8 },
+                { name: '甘肃', value: 1296.1 },
+                { name: '山西', value: 1468.7 },
+                { name: '内蒙古', value: 4100.5 },
+                { name: '陕西', value: 1352.3 },
+                { name: '吉林', value: 4266.0 },
+                { name: '福建', value: 514.4 },
+                { name: '贵州', value: 1146.1 },
+                { name: '广东', value: 1313.4 },
+                { name: '青海', value: 118.3 },
+                { name: '西藏', value: 112.9 },
+                { name: '四川', value: 3633.8 },
+                { name: '宁夏', value: 385.9 },
+                { name: '海南', value: 142.4 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ],
+            seafood: [
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 4252 },
+                { name: '天津', value: 41033 },
+                { name: '上海', value: 138058 },
+                { name: '重庆', value: 0 },
+                { name: '河北', value: 813209 },
+                { name: '河南', value: 0 },
+                { name: '云南', value: 0 },
+                { name: '辽宁', value: 4027168 },
+                { name: '黑龙江', value: 0},
+                { name: '湖南', value: 0},
+                { name: '安徽', value: 0 },
+                { name: '山东', value: 7622454 },
+                { name: '新疆', value: 0 },
+                { name: '江苏', value: 1352220 },
+                { name: '浙江', value: 4754098 },
+                { name: '江西', value: 0 },
+                { name: '湖北', value: 0 },
+                { name: '广西', value: 2151841 },
+                { name: '甘肃', value: 0 },
+                { name: '山西', value: 0 },
+                { name: '内蒙古', value: 0 },
+                { name: '陕西', value: 0 },
+                { name: '吉林', value: 0 },
+                { name: '福建', value: 7624395 },
+                { name: '贵州', value: 0 },
+                { name: '广东', value: 4582874 },
+                { name: '青海', value: 0 },
+                { name: '西藏', value: 0 },
+                { name: '四川', value: 0 },
+                { name: '宁夏', value: 0 },
+                { name: '海南', value: 1280529 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ],
+            dairy: [
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 26.22 },
+                { name: '天津', value: 51.13 },
+                { name: '上海', value: 30.22 },
+                { name: '重庆', value: 3.19 },
+                { name: '河北', value: 549.31},
+                { name: '河南', value: 217.80 },
+                { name: '云南', value: 70.22 },
+                { name: '辽宁', value: 135.12 },
+                { name: '黑龙江', value: 501.87 },
+                { name: '湖南', value: 7.20 },
+                { name: '安徽', value: 50.74 },
+                { name: '山东', value: 304.49 },
+                { name: '新疆', value: 231.46 },
+                { name: '江苏', value: 68.78 },
+                { name: '浙江', value: 79.65 },
+                { name: '江西', value: 7.92},
+                { name: '湖北', value: 9.18 },
+                { name: '广西', value: 13.12 },
+                { name: '甘肃', value: 92.67 },
+                { name: '山西', value: 143.14 },
+                { name: '内蒙古', value: 740.85 },
+                { name: '陕西', value: 170.46 },
+                { name: '吉林', value: 29.37 },
+                { name: '福建', value: 22.05 },
+                { name: '贵州', value: 3.73 },
+                { name: '广东', value: 19.89 },
+                { name: '青海', value: 35.30 },
+                { name: '西藏', value: 57.79 },
+                { name: '四川', value: 70.83 },
+                { name: '宁夏', value: 342.50},
+                { name: '海南', value: 0.28 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ],
+            vegetable:[
+                { name: "南海诸岛", value: 0 },
+                { name: '北京', value: 207.48 },
+                { name: '天津', value: 253.75 },
+                { name: '上海', value: 254.78 },
+                { name: '重庆', value: 2362.01 },
+                { name: '河北', value: 5498.04 },
+                { name: '河南', value: 8045.56 },
+                { name: '云南', value: 2960.83 },
+                { name: '辽宁', value: 2139.68 },
+                { name: '黑龙江', value: 870.47 },
+                { name: '湖南', value: 4488.81 },
+                { name: '安徽', value: 2630.14 },
+                { name: '山东', value: 9272.41 },
+                { name: '新疆', value: 2074.23 },
+                { name: '江苏', value: 6135.61 },
+                { name: '浙江', value: 1992.51 },
+                { name: '江西', value: 1860.88 },
+                { name: '湖北', value: 4502.71 },
+                { name: '广西', value: 4425.03 },
+                { name: '甘肃', value: 1822.65 },
+                { name: '山西', value: 1065.88 },
+                { name: '内蒙古', value: 1097.14 },
+                { name: '陕西', value: 2151.2 },
+                { name: '吉林', value: 540.05 },
+                { name: '福建', value: 1804.78 },
+                { name: '贵州', value: 3469.97 },
+                { name: '广东', value: 4099.33 },
+                { name: '青海', value: 158.49 },
+                { name: '西藏', value: 88.39 },
+                { name: '四川', value: 5417.87 },
+                { name: '宁夏', value: 544.54 },
+                { name: '海南', value: 632.9 },
+                { name: '台湾', value: 0 },
+                { name: '香港', value: 0 },
+                { name: '澳门', value: 0 }
+            ]
+            
+        };
+
+        // 初始化图形区域
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 默认数据
+        var currentData = data.fruit;
+        var currentTitle = '水果年产量（万吨）';
+
+        // 相关属性
+        var option = {
+            tooltip: {
+                formatter: function (params, ticket, callback) {
+                    return params.seriesName + '<br/>' + params.name + '：' + params.value;
+                } // 数据格式化
+            },
+            visualMap: {
+                min: 0,
+                max: 1500,
+                left: 'left',
+                top: 'bottom',
+                text: ['多', '少'], // 取值范围的文字
+                inRange: {
+                    // color: ['#289A48', '#E63F31'] // 取值范围的颜色
+                    color: ['#289A48', '#55C16A', '#82E48C', '#B0F7AF', '#E63F31', '#E66A31', '#E69531']
+                },
+                show: true // 图注
+            },
+            geo: {
+                map: 'china',
+                roam: false, // 不开启缩放和平移
+                zoom: 1.23, // 视角缩放比例
+                label: {
+                    normal: {
+                        show: true,
+                        fontSize: '10',
+                        color: 'rgba(0,0,0,0.7)'
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        borderColor: 'rgba(0, 0, 0, 0.2)'
+                    },
+                    emphasis: {
+                        areaColor: '#F3B329', // 鼠标选择区域颜色
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowBlur: 20,
+                        borderWidth: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            },
+            series: [{
+                name: currentTitle,
+                type: 'map',
+                geoIndex: 0,
+                data: currentData
+            }]
+        };
+
+        myChart.setOption(option);
+
+        // 点击事件监听
+        myChart.on('click', function (params) {
+            alert(params.name + " " + currentTitle + "为：" + params.value + "万吨");
+        });
+
+        // 切换数据函数
+        function changeData(type) {
+            currentData = data[type];
+            switch (type) {
+                case 'fruit':
+                    currentTitle = '水果年产量（万吨）';
+                    break;
+                case 'vegetable':
+                    currentTitle = '蔬菜年产量（万吨）';
+                    break;
+
+                case 'meat':
+                    currentTitle = '肉类年产量（万吨）';
+                    break;
+                case 'grain':
+                    currentTitle = '粮食年产量（万吨）';
+                    break;
+                case 'seafood':
+                    currentTitle = '海鲜年产量（吨）';
+                    break;
+                case 'dairy':
+                    currentTitle = '乳制品年产量（万吨）';
+                    break;
+            }
+            option.series[0].data = currentData;
+            option.series[0].name = currentTitle;
+            option.visualMap.max = Math.max(...currentData.map(item => item.value));
+            myChart.setOption(option);
+            document.getElementById('title').innerText = '中国各地' + currentTitle;
+        }
+
+
+
+
+        
+    </script>
+</body>
+
+</html>

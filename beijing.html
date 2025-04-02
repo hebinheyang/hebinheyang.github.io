@@ -1,0 +1,111 @@
+body {
+/* min-height: 100vh;
+margin: 0; */
+width: 100%;
+height: 100%;
+margin: 0;
+padding: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+flex-direction: column;
+/* position: relative; */
+position: static; /* 移除定位 */
+/* overflow: hidden; */
+overflow: auto; /* 允许滚动 */
+background: #0a192f; /* 深海蓝基色 */
+
+}
+
+/* 新增动态背景 */
+/* 动态渐变层 */
+body::before {
+content: '';
+position: absolute;
+width: 150%;
+height: 150%;
+background:
+linear-gradient(
+335deg,
+rgba(16, 84, 147, 0.8) 0%,
+rgba(92, 167, 228, 0.6) 25%,
+rgba(138, 43, 226, 0.4) 50%,
+rgba(255, 105, 180, 0.2) 100%
+),
+radial-gradient(
+circle at 70% 30%,
+rgba(255, 215, 0, 0.15) 0%,
+transparent 40%
+);
+animation: gradientFlow 120s ease infinite;
+mix-blend-mode: soft-light;
+}
+
+/* 星际粒子层 */
+body::after {
+content: '';
+position: absolute;
+width: 300%;
+height: 300%;
+background:
+radial-gradient(circle,
+rgba(255,255,255,0.9) 6%,
+transparent 4%
+),
+radial-gradient(circle,
+rgba(255,215,0,0.8) 4%,
+transparent 6%
+);
+background-size: 50px 50px;
+opacity: 0.3;
+animation:
+particleMove 30s linear infinite,
+particlePulse 4s ease-in-out infinite;
+}
+body::before,
+body::after {
+transform: translate3d(0,0,0); /* 启用硬件加速 */
+will-change: transform, opacity; /* 提前告知浏览器 */
+
+/* 解决交互问题 */
+pointer-events: none; /* 关键属性：允许鼠标事件穿透 */
+z-index: 0; /* 明确设置背景层在底层 */
+}
+
+@keyframes gradientFlow {
+0%, 100% {
+transform: rotate(0deg) translate(0, 0);
+filter: hue-rotate(0deg);
+}
+25% {
+transform: rotate(2deg) translate(-5%, 3%);
+}
+50% {
+transform: rotate(-1deg) translate(5%, -2%);
+}
+75% {
+transform: rotate(3deg) translate(-3%, 4%);
+}
+}
+
+@keyframes particleMove {
+from { transform: translate(0,0); }
+to { transform: translate(-50%,-50%); }
+}
+
+@keyframes particlePulse {
+0%, 100% { opacity: 0.2; }
+50% { opacity: 0.4; }
+}
+
+/* 内容容器优化 */
+.content-wrapper {
+position: relative;
+z-index: 1;
+background: rgba(10, 25, 47, 0.7);
+padding: 2rem;
+border-radius: 12px;
+backdrop-filter: blur(8px);
+border: 1px solid rgba(92, 167, 228, 0.3);
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
